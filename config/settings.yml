@@ -1,0 +1,12 @@
+---
+production:
+  ca_path: '/etc/grid-security/certificates'
+  debug: false
+
+development:
+  ca_path: '/etc/grid-security/certificates'
+  debug: true
+
+test:
+  ca_path: '/etc/grid-security/certificates'
+  debug: true

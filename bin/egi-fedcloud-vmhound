@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+
+# -------------------------------------------------------------------------- #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+require 'rubygems'
+
+require 'thor'
+require 'egi-fedcloud-vmhound'
+
+class EgiFedcloudVmhound < Thor
+  include Thor::Actions
+
+  desc "ip IP_ADDRESS", "Prints information based on the provided IP address or IP address range"
+  method_option :username, :type => :string, :default => nil,
+                :aliases => '-c', :desc => 'Username for CMF access'
+  method_option :password, :type => :string, :default => nil,
+                :aliases => '-p', :desc => 'Password for CMF access'
+  method_option :ca_path, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.ca_path,
+                :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
+  method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
+                :aliases => '-d', :desc => 'Enable debugging'
+  def ip(ip_address)
+    init_log options[:debug]
+
+    $stdout.puts Egi::Fedcloud::Vmhound::Formatter.as_table(
+      Egi::Fedcloud::Vmhound::Extractor.find_by_ip(
+        ip_address,
+        options
+      )
+    )
+  end
+
+  desc "appuri URI", "Prints information based on the provided Appliance MPURI"
+  method_option :username, :type => :string, :default => nil,
+                :aliases => '-c', :desc => 'Username for CMF access'
+  method_option :password, :type => :string, :default => nil,
+                :aliases => '-p', :desc => 'Password for CMF access'
+  method_option :ca_path, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.ca_path,
+                :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
+  method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
+                :aliases => '-d', :desc => 'Enable debugging'
+  def appuri(uri)
+    init_log options[:debug]
+
+    $stdout.puts Egi::Fedcloud::Vmhound::Formatter.as_table(
+      Egi::Fedcloud::Vmhound::Extractor.find_by_appuri(
+        uri,
+        options
+      )
+    )
+  end
+
+  # Static method required by Thor to make certain
+  # actions work.
+  def self.source_root
+    File.expand_path(File.join('..', '..', 'config'), __FILE__)
+  end
+
+  private
+
+  # Initializes logging facilities.
+  #
+  # @param debug [Boolean] rudimentary logging level control
+  # @return [Egi::Fedcloud::Vmhound::Log] logger instance for additional configuration
+  def init_log(debug = false)
+    logger = Egi::Fedcloud::Vmhound::Log.new(STDERR)
+    logger.level = debug ? Egi::Fedcloud::Vmhound::Log::DEBUG : Egi::Fedcloud::Vmhound::Log::ERROR
+    logger
+  end
+end
+
+EgiFedcloudVmhound.start
