@@ -23,10 +23,14 @@ class EgiFedcloudVmhound < Thor
   include Thor::Actions
 
   desc "ip IP_ADDRESS", "Prints information based on the provided IP address or IP address range"
+  method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
   method_option :username, :type => :string, :default => nil,
-                :aliases => '-c', :desc => 'Username for CMF access'
+                :aliases => '-u', :desc => 'Username for CMF access'
   method_option :password, :type => :string, :default => nil,
                 :aliases => '-p', :desc => 'Password for CMF access'
+  method_option :auth_file, :type => :string, :default => nil,
+                :aliases => '-f', :desc => 'File with authentication information for CMF access'
   method_option :ca_path, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.ca_path,
                 :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
   method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
@@ -43,10 +47,14 @@ class EgiFedcloudVmhound < Thor
   end
 
   desc "appuri URI", "Prints information based on the provided Appliance MPURI"
+  method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
   method_option :username, :type => :string, :default => nil,
-                :aliases => '-c', :desc => 'Username for CMF access'
+                :aliases => '-u', :desc => 'Username for CMF access'
   method_option :password, :type => :string, :default => nil,
                 :aliases => '-p', :desc => 'Password for CMF access'
+  method_option :auth_file, :type => :string, :default => nil,
+                :aliases => '-f', :desc => 'File with authentication information for CMF access'
   method_option :ca_path, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.ca_path,
                 :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
   method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
@@ -57,6 +65,30 @@ class EgiFedcloudVmhound < Thor
     $stdout.puts Egi::Fedcloud::Vmhound::Formatter.as_table(
       Egi::Fedcloud::Vmhound::Extractor.find_by_appuri(
         uri,
+        options
+      )
+    )
+  end
+
+  desc "user ID", "Prints information based on the provided user identifier"
+  method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
+  method_option :username, :type => :string, :default => nil,
+                :aliases => '-u', :desc => 'Username for CMF access'
+  method_option :password, :type => :string, :default => nil,
+                :aliases => '-p', :desc => 'Password for CMF access'
+  method_option :auth_file, :type => :string, :default => nil,
+                :aliases => '-f', :desc => 'File with authentication information for CMF access'
+  method_option :ca_path, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.ca_path,
+                :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
+  method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
+                :aliases => '-d', :desc => 'Enable debugging'
+  def user(id)
+    init_log options[:debug]
+
+    $stdout.puts Egi::Fedcloud::Vmhound::Formatter.as_table(
+      Egi::Fedcloud::Vmhound::Extractor.find_by_user(
+        id,
         options
       )
     )

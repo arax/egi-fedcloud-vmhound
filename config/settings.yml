@@ -1,12 +1,15 @@
 ---
 production:
+  cmf: opennebula
   ca_path: '/etc/grid-security/certificates'
   debug: false
 
 development:
+  cmf: opennebula
   ca_path: '/etc/grid-security/certificates'
   debug: true
 
 test:
+  cmf: dummy
   ca_path: '/etc/grid-security/certificates'
   debug: true

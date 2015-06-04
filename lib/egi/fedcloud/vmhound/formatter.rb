@@ -9,11 +9,11 @@ class Egi::Fedcloud::Vmhound::Formatter
       Egi::Fedcloud::Vmhound::Log.debug "[#{self}] Transforming #{data.inspect} into a table"
       table = Terminal::Table.new
 
-      table.add_row [' >>> Site Name <<< ', ' >>> NGI Name <<< ', ' >>> CSIRT Contact(s) <<< ']
+      table.add_row [' >>> VM ID <<< ', ' >>> Owner <<< ', ' >>> Phys. location <<< ', ' >>> State <<< ']
       table.add_separator
-      data.each do |site|
+      data.each do |vm|
         table.add_separator
-        table.add_row [site[:name], site[:ngi], site[:csirt]]
+        table.add_row [vm[:id], vm[:owner], vm[:host], vm[:state]]
       end
 
       table
