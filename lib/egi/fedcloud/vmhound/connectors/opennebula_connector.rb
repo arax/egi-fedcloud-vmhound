@@ -3,6 +3,9 @@ require 'opennebula'
 #
 class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::Vmhound::Connectors::BaseConnector
 
+  # Number of VMs to process in one iteration
+  VM_POOL_BATCH_SIZE = 10000
+
   # Initializes a connector instance.
   #
   # @param opts [Hash] options for the connector
@@ -11,8 +14,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     # TODO: use configured credentials
     client = OpenNebula::Client.new
 
-    @cached_vm_pool = false
     @vm_pool = OpenNebula::VirtualMachinePool.new(client)
+    @vm_pool_ary = nil
 
     @image_pool = OpenNebula::ImagePool.new(client)
     @canonical_image_pool = nil
@@ -57,18 +60,44 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     return if allow_states && allow_states.empty?
     reject_states ||= []
 
-    unless @cached_vm_pool
-      check_retval @vm_pool.info_all!
-      @cached_vm_pool = true
-    end
+    @vm_pool_ary = instances_batch_pool(@vm_pool) unless @vm_pool_ary
 
     vms = []
-    @vm_pool.each do |vm|
+    @vm_pool_ary.each do |vm|
       next if reject_states.include? vm.state_str
       vms << canonical_instance(vm) if (allow_states.nil? || (allow_states && allow_states.include?(vm.state_str)))
     end
 
     vms
+  end
+
+  # Hides batch processing from the rest of the application. Returns
+  # a complete list of VM instances regardless of the underlying
+  # batch size.
+  #
+  # @param vm_pool [OpenNebula::VirtualMachinePool] ONe pool instance
+  # @return [Array<OpenNebula::VirtualMachine>] a list of VM instances
+  def instances_batch_pool(vm_pool)
+    fail 'Pool object not provided!' unless vm_pool
+
+    batch_start = 0
+    batch_stop = VM_POOL_BATCH_SIZE - 1
+    vm_pool_ary = []
+
+    begin
+      check_retval vm_pool.info(
+        OpenNebula::VirtualMachinePool::INFO_ALL,
+        batch_start, batch_stop,
+        OpenNebula::VirtualMachinePool::INFO_ALL_VM
+      )
+      vm_pool_ary.concat vm_pool.to_a unless vm_pool.count < 1
+
+      batch_start = batch_stop + 1
+      batch_stop += VM_POOL_BATCH_SIZE
+    end until vm_pool.count < 1
+
+    vm_pool_ary.compact!
+    vm_pool_ary
   end
 
   # Retrieves a list of images.
@@ -236,9 +265,10 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     identities = []
 
     identities << opennebula_user['TEMPLATE/KRB_PRINCIPAL']
-    identities << opennebula_user['TEMPLATE/X509_DN']
+    identities << opennebula_user['TEMPLATE/X509_DN'].split('|') if opennebula_user['TEMPLATE/X509_DN']
     identities << opennebula_user['NAME']
     identities << opennebula_user['ID'].to_s
+    identities.flatten!
     identities.compact!
 
     identities
