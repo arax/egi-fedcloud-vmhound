@@ -154,12 +154,13 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     {
       id: opennebula_instance['ID'].to_i,
       name: opennebula_instance['NAME'],
+      group: opennebula_instance['GNAME'],
       owner: user_by_id(opennebula_instance['UID']),
       appliance: image_by_id(opennebula_instance['TEMPLATE/DISK[1]/IMAGE_ID']),
       ips: canonical_instance_ips(opennebula_instance),
       identifiers: canonical_instance_identifiers(opennebula_instance),
       host: canonical_instance_host(opennebula_instance),
-      state: opennebula_instance.state_str,
+      state: "#{opennebula_instance.state_str} - #{opennebula_instance.lcm_state_str}",
     }
   end
 
