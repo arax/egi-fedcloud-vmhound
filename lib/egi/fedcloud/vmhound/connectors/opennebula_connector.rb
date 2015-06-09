@@ -3,9 +3,6 @@ require 'opennebula'
 #
 class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::Vmhound::Connectors::BaseConnector
 
-  # Number of VMs to process in one iteration
-  VM_POOL_BATCH_SIZE = 10000
-
   # Initializes a connector instance.
   #
   # @param opts [Hash] options for the connector
@@ -97,28 +94,16 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   def instances_batch_pool(vm_pool)
     fail 'Pool object not provided!' unless vm_pool
     Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Iterating over the VM " \
-                                      "pool with batch size #{VM_POOL_BATCH_SIZE}"
+                                      "pool without batch processing"
 
-    batch_start = 0
-    batch_stop = VM_POOL_BATCH_SIZE - 1
-    vm_pool_ary = []
+    check_retval vm_pool.info(
+      OpenNebula::VirtualMachinePool::INFO_ALL,
+      -1, -1,
+      OpenNebula::VirtualMachinePool::INFO_NOT_DONE
+    )
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Got #{vm_pool.count.inspect} VMs from pool"
 
-    begin
-      Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Getting #{batch_start} to #{batch_stop}"
-      check_retval vm_pool.info(
-        OpenNebula::VirtualMachinePool::INFO_ALL,
-        batch_start, batch_stop,
-        OpenNebula::VirtualMachinePool::INFO_NOT_DONE
-      )
-      Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Got #{vm_pool.count.inspect} VMs from pool"
-      vm_pool_ary.concat vm_pool.to_a unless vm_pool.count < 1
-
-      batch_start = batch_stop + 1
-      batch_stop += VM_POOL_BATCH_SIZE
-    end until vm_pool.count < 1
-
-    vm_pool_ary.compact!
-    vm_pool_ary
+    vm_pool.to_a
   end
 
   # Retrieves a list of images.
