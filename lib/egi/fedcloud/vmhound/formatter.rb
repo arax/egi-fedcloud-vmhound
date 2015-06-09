@@ -5,30 +5,38 @@ class Egi::Fedcloud::Vmhound::Formatter
 
   class << self
     #
-    def as_table(data)
+    def as_table(data, opts = {})
       data ||= []
       Egi::Fedcloud::Vmhound::Log.debug "[#{self}] Transforming #{data.inspect} into a table"
       table = Terminal::Table.new
 
-      table.add_row [
-        ' >>> VM ID <<< ', ' >>> Owner <<< ', ' >>> VO/Group <<< ',
-        ' >>> IPs <<< ', ' >>> Phys. location <<< ', ' >>> State <<< ',
-        ' >>> Contact <<< '
+      thead = [
+        ' >>> VM ID <<< ', ' >>> Contact <<< ',
+        ' >>> Location <<< ', ' >>> State <<< '
       ]
+      thead.concat [
+        ' >>> Owner Identity <<< ', ' >>> Group <<< ', ' >>> IPs <<< '
+      ] if opts[:details]
+
+      table.add_row thead
       table.add_separator
       data.each do |vm|
         table.add_separator
-        table.add_row [
-          vm[:id], vm[:owner][:identities].join("\n"), vm[:group],
-          vm[:ips].join("\n"), vm[:host], vm[:state], vm[:owner][:email]
+        tbody = [
+          vm[:id], vm[:owner][:email], vm[:host], vm[:state]
         ]
+        tbody.concat [
+          vm[:owner][:identities].join("\n"),
+          vm[:group], vm[:ips].join("\n")
+        ] if opts[:details]
+        table.add_row tbody
       end
 
       table
     end
 
     #
-    def as_json(data)
+    def as_json(data, opts = {})
       data ||= []
       data ? JSON.generate(data) : '{}'
     end

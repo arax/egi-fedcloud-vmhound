@@ -3,16 +3,19 @@ production:
   cmf: opennebula
   ca_path: '/etc/grid-security/certificates'
   insecure: false
+  details: false
   debug: false
 
 development:
   cmf: opennebula
   ca_path: '/etc/grid-security/certificates'
   insecure: true
+  details: true
   debug: true
 
 test:
   cmf: dummy
   ca_path: '/etc/grid-security/certificates'
   insecure: true
+  details: true
   debug: true

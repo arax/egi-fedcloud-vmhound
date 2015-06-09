@@ -24,7 +24,7 @@ class EgiFedcloudVmhound < Thor
 
   desc "ip IP_ADDRESS", "Prints information based on the provided IP address or IP address range"
   method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
-                :aliases => '-c', :desc => 'Type of the underlying CMF', :required => true
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
   method_option :endpoint, :type => :string, :default => nil,
                 :aliases => '-e', :desc => 'Endpoint of the CMF'
   method_option :username, :type => :string, :default => nil,
@@ -37,6 +37,8 @@ class EgiFedcloudVmhound < Thor
                 :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
   method_option :insecure, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.insecure,
                 :aliases => '-k', :desc => 'Enable insecure mode for SSL (no peer validation)'
+  method_option :details, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.details,
+                :aliases => '-l', :desc => 'Enable wide tables with more details (off by default)'
   method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
                 :aliases => '-d', :desc => 'Enable debugging'
   def ip(ip_address)
@@ -46,13 +48,14 @@ class EgiFedcloudVmhound < Thor
       Egi::Fedcloud::Vmhound::Extractor.find_by_ip(
         ip_address,
         options
-      )
+      ),
+      options
     )
   end
 
   desc "appuri URI", "Prints information based on the provided Appliance MPURI"
   method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
-                :aliases => '-c', :desc => 'Type of the underlying CMF', :required => true
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
   method_option :endpoint, :type => :string, :default => nil,
                 :aliases => '-e', :desc => 'Endpoint of the CMF'
   method_option :username, :type => :string, :default => nil,
@@ -65,6 +68,8 @@ class EgiFedcloudVmhound < Thor
                 :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
   method_option :insecure, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.insecure,
                 :aliases => '-k', :desc => 'Enable insecure mode for SSL (no peer validation)'
+  method_option :details, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.details,
+                :aliases => '-l', :desc => 'Enable wide tables with more details (off by default)'
   method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
                 :aliases => '-d', :desc => 'Enable debugging'
   def appuri(uri)
@@ -74,13 +79,14 @@ class EgiFedcloudVmhound < Thor
       Egi::Fedcloud::Vmhound::Extractor.find_by_appuri(
         uri,
         options
-      )
+      ),
+      options
     )
   end
 
   desc "user ID", "Prints information based on the provided user identifier"
   method_option :cmf, :type => :string, :default => Egi::Fedcloud::Vmhound::Settings.cmf,
-                :aliases => '-c', :desc => 'Type of the underlying CMF', :required => true
+                :aliases => '-c', :desc => 'Type of the underlying CMF'
   method_option :endpoint, :type => :string, :default => nil,
                 :aliases => '-e', :desc => 'Endpoint of the CMF'
   method_option :username, :type => :string, :default => nil,
@@ -93,6 +99,8 @@ class EgiFedcloudVmhound < Thor
                 :aliases => '-x', :desc => 'Directory path to all trusted CA certificates'
   method_option :insecure, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.insecure,
                 :aliases => '-k', :desc => 'Enable insecure mode for SSL (no peer validation)'
+  method_option :details, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.details,
+                :aliases => '-l', :desc => 'Enable wide tables with more details (off by default)'
   method_option :debug, :type => :boolean, :default => Egi::Fedcloud::Vmhound::Settings.debug,
                 :aliases => '-d', :desc => 'Enable debugging'
   def user(id)
@@ -102,7 +110,8 @@ class EgiFedcloudVmhound < Thor
       Egi::Fedcloud::Vmhound::Extractor.find_by_user(
         id,
         options
-      )
+      ),
+      options
     )
   end
 
