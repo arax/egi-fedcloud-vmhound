@@ -21,7 +21,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
 
     options = {}
     options[:sync] = true
-    options[:cert_dir] = opts[:ca_path] unless opts[:ca_path].blank?
+    # TODO: fix https://github.com/OpenNebula/one/blob/ced1a29bfb3f3d1991ea88e658ea9462071fe4b8/src/oca/ruby/opennebula/client.rb#L166
+    #options[:cert_dir] = opts[:ca_path] unless opts[:ca_path].blank?
     options[:disable_ssl_verify] = opts[:insecure]
 
     client = OpenNebula::Client.new(secret, opts[:endpoint], options)

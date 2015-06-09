@@ -5,7 +5,8 @@ class Egi::Fedcloud::Vmhound::Formatter
 
   class << self
     #
-    def as_table(data = [])
+    def as_table(data)
+      data ||= []
       Egi::Fedcloud::Vmhound::Log.debug "[#{self}] Transforming #{data.inspect} into a table"
       table = Terminal::Table.new
 
@@ -20,7 +21,8 @@ class Egi::Fedcloud::Vmhound::Formatter
     end
 
     #
-    def as_json(data = [])
+    def as_json(data)
+      data ||= []
       data ? JSON.generate(data) : '{}'
     end
   end
