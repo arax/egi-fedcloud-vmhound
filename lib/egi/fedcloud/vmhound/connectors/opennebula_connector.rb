@@ -11,8 +11,20 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @param opts [Hash] options for the connector
   def initialize(opts = {})
     super
-    # TODO: use configured credentials
-    client = OpenNebula::Client.new
+
+    secret = if opts[:username] && opts[:password]
+               "#{opts[:username]}:#{opts[:password]}"
+             else
+               opts[:auth_file] ? File.read(opts[:auth_file]) : nil
+             end
+    secret.strip! if secret
+
+    options = {}
+    options[:sync] = true
+    options[:cert_dir] = opts[:ca_path] unless opts[:ca_path].blank?
+    options[:disable_ssl_verify] = opts[:insecure]
+
+    client = OpenNebula::Client.new(secret, opts[:endpoint], options)
 
     @vm_pool = OpenNebula::VirtualMachinePool.new(client)
     @vm_pool_ary = nil
