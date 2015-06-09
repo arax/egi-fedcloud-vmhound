@@ -7,7 +7,7 @@ class Egi::Fedcloud::Vmhound::Connectors::DummyConnector < Egi::Fedcloud::Vmhoun
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
   def active_instances
-    [{}]
+    []
   end
 
   # Retrieves running instances from the underlying Dummy. Only currently
@@ -15,7 +15,7 @@ class Egi::Fedcloud::Vmhound::Connectors::DummyConnector < Egi::Fedcloud::Vmhoun
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
   def running_instances
-    [{}]
+    []
   end
 
 end
