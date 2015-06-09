@@ -12,6 +12,7 @@ class Egi::Fedcloud::Vmhound::Extractor
       return if defined?(@@connector)
 
       connector_name = "#{options[:cmf].camelize}Connector"
+      Egi::Fedcloud::Vmhound::Log.debug "[#{self}] Getting #{connector_name} for #{options[:cmf]}"
       @@connector = Egi::Fedcloud::Vmhound::Connectors.const_get(connector_name).new(options)
 
       connector_name

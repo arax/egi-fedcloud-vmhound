@@ -13,8 +13,10 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     super
 
     secret = if opts[:username] && opts[:password]
+               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Using provided plain credentials"
                "#{opts[:username]}:#{opts[:password]}"
              else
+               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Falling back to file and environment credentials"
                opts[:auth_file] ? File.read(opts[:auth_file]) : nil
              end
     secret.strip! if secret
@@ -43,6 +45,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
   def active_instances
+    Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving active instances"
     instances
   end
 
@@ -51,6 +54,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
   def running_instances
+    Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving running instances"
     instances ['ACTIVE']
   end
 
@@ -62,6 +66,9 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @param reject_states [Array<String>] a list of states to be rejected
   # @return [Array<Hash>] a list of instances matching given criteria
   def instances(allow_states = nil, reject_states = nil)
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Retrieving instances: " \
+                                      "allow_states=#{allow_states.inspect} & " \
+                                      "reject_states=#{reject_states.inspect}"
     return if allow_states && allow_states.empty?
     reject_states ||= []
 
@@ -69,7 +76,12 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
 
     vms = []
     @vm_pool_ary.each do |vm|
-      next if reject_states.include? vm.state_str
+      if reject_states.include? vm.state_str
+        Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Rejecting VM #{vm['ID']} " \
+                                          "-- #{vm.state_str}"
+        next
+      end
+
       vms << canonical_instance(vm) if (allow_states.nil? || (allow_states && allow_states.include?(vm.state_str)))
     end
 
@@ -84,17 +96,21 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @return [Array<OpenNebula::VirtualMachine>] a list of VM instances
   def instances_batch_pool(vm_pool)
     fail 'Pool object not provided!' unless vm_pool
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Iterating over the VM " \
+                                      "pool with batch size #{VM_POOL_BATCH_SIZE}"
 
     batch_start = 0
     batch_stop = VM_POOL_BATCH_SIZE - 1
     vm_pool_ary = []
 
     begin
+      Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Getting #{batch_start} to #{batch_stop}"
       check_retval vm_pool.info(
         OpenNebula::VirtualMachinePool::INFO_ALL,
         batch_start, batch_stop,
         OpenNebula::VirtualMachinePool::INFO_NOT_DONE
       )
+      Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Got #{vm_pool.count.inspect} VMs from pool"
       vm_pool_ary.concat vm_pool.to_a unless vm_pool.count < 1
 
       batch_start = batch_stop + 1
@@ -110,6 +126,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @return [Array<Hash>] a list of images
   def images
     return @canonical_image_pool if @canonical_image_pool
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Retrieving all images"
     check_retval @image_pool.info_all!
 
     @canonical_image_pool = []
@@ -122,6 +139,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @param image_id [String,Integer] native image ID
   # @return [Hash,NilClass] canonical image structure
   def image_by_id(image_id)
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Picking image ID #{image_id.inspect} from pool"
     images.select { |image| image[:id] == image_id.to_i }.first
   end
 
@@ -130,6 +148,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @return [Array<Hash>] a list of users
   def users
     return @canonical_user_pool if @canonical_user_pool
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Retrieving all users"
     check_retval @user_pool.info!
 
     @canonical_user_pool = []
@@ -142,6 +161,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @param user_id [String,Integer] native user ID
   # @return [Hash,NilClass] canonical user structure
   def user_by_id(user_id)
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Picking user ID #{user_id.inspect} from pool"
     users.select { |user| user[:id] == user_id.to_i }.first
   end
 
@@ -175,6 +195,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     opennebula_instance.each('TEMPLATE/NIC') { |nic| ips << nic['IP'] }
     ips.compact!
 
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Assigning IPs #{ips.inspect} " \
+                                      "to #{opennebula_instance['ID'].inspect}"
     ips
   end
 
@@ -191,6 +213,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     identifiers << opennebula_instance['ID'].to_s
     identifiers.compact!
 
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Assigning instance IDs " \
+                                      "#{identifiers.inspect} to #{opennebula_instance['ID'].inspect}"
     identifiers
   end
 
@@ -205,6 +229,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     opennebula_instance.each('HISTORY_RECORDS/HISTORY') { |history| hosts << history['HOSTNAME'] }
     hosts.compact!
 
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Assigning hosts #{hosts.inspect} " \
+                                      "to #{opennebula_instance['ID'].inspect}"
     hosts.last
   end
 
@@ -242,6 +268,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     identifiers << opennebula_image['ID'].to_s
     identifiers.compact!
 
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Assigning IDs #{identifiers.inspect} " \
+                                      "to image #{opennebula_image['ID'].inspect}"
     identifiers
   end
 
@@ -277,6 +305,8 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     identities.flatten!
     identities.compact!
 
+    Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Assigning identities #{identities.inspect} " \
+                                      "to user #{opennebula_user['ID'].inspect}"
     identities
   end
 
