@@ -24,21 +24,13 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     @canonical_user_pool = nil
   end
 
-  # Retrieves all instances from the underlying OpenNebula. Including instances
-  # already terminated by the user.
-  #
-  # @return [Array<Hash>] List of instances, each represented as a hash
-  def all_instances
-    instances
-  end
-
   # Retrieves active instances from the underlying OpenNebula. Including instances
   # in transitional or suspended states. Terminated instances will not be
   # included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
   def active_instances
-    instances nil, ['DONE', 'INIT']
+    instances
   end
 
   # Retrieves running instances from the underlying OpenNebula. Only currently
@@ -88,7 +80,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
       check_retval vm_pool.info(
         OpenNebula::VirtualMachinePool::INFO_ALL,
         batch_start, batch_stop,
-        OpenNebula::VirtualMachinePool::INFO_ALL_VM
+        OpenNebula::VirtualMachinePool::INFO_NOT_DONE
       )
       vm_pool_ary.concat vm_pool.to_a unless vm_pool.count < 1
 

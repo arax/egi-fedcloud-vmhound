@@ -8,12 +8,6 @@ class Egi::Fedcloud::Vmhound::Connectors::BaseConnector
     @options = opts.freeze
   end
 
-  # Retrieves all instances from the underlying CMF. Including instances
-  # already terminated by the user.
-  #
-  # @return [Array<Hash>] List of instances, each represented as a hash
-  def all_instances; end
-
   # Retrieves active instances from the underlying CMF. Including instances
   # in transitional or suspended states. Terminated instances will not be
   # included.
