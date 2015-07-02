@@ -41,18 +41,18 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def active_instances
+  def instances
     Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving active instances"
-    instances
+    fetch_instances
   end
 
   # Retrieves running instances from the underlying OpenNebula. Only currently
   # running instances will be included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def running_instances
+  def active_instances
     Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving running instances"
-    instances ['ACTIVE']
+    fetch_instances ['ACTIVE']
   end
 
   private
@@ -62,14 +62,14 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   # @param allow_states [Array<String>] a list of allowed states
   # @param reject_states [Array<String>] a list of states to be rejected
   # @return [Array<Hash>] a list of instances matching given criteria
-  def instances(allow_states = nil, reject_states = nil)
+  def fetch_instances(allow_states = nil, reject_states = nil)
     Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Retrieving instances: " \
                                       "allow_states=#{allow_states.inspect} & " \
                                       "reject_states=#{reject_states.inspect}"
     return if allow_states && allow_states.empty?
     reject_states ||= []
 
-    @vm_pool_ary = instances_batch_pool(@vm_pool) unless @vm_pool_ary
+    @vm_pool_ary = fetch_instances_batch_pool(@vm_pool) unless @vm_pool_ary
 
     vms = []
     @vm_pool_ary.each do |vm|
@@ -91,7 +91,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   #
   # @param vm_pool [OpenNebula::VirtualMachinePool] ONe pool instance
   # @return [Array<OpenNebula::VirtualMachine>] a list of VM instances
-  def instances_batch_pool(vm_pool)
+  def fetch_instances_batch_pool(vm_pool)
     fail 'Pool object not provided!' unless vm_pool
     Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Iterating over the VM " \
                                       "pool without batch processing"

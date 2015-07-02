@@ -13,12 +13,12 @@ class Egi::Fedcloud::Vmhound::Connectors::BaseConnector
   # included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def active_instances; end
+  def instances; end
 
   # Retrieves running instances from the underlying CMF. Only currently
   # running instances will be included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def running_instances; end
+  def active_instances; end
 
 end

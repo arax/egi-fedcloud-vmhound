@@ -6,7 +6,7 @@ class Egi::Fedcloud::Vmhound::Connectors::DummyConnector < Egi::Fedcloud::Vmhoun
   # included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def active_instances
+  def instances
     Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving active instances"
     []
   end
@@ -15,7 +15,7 @@ class Egi::Fedcloud::Vmhound::Connectors::DummyConnector < Egi::Fedcloud::Vmhoun
   # running instances will be included.
   #
   # @return [Array<Hash>] List of instances, each represented as a hash
-  def running_instances
+  def active_instances
     Egi::Fedcloud::Vmhound::Log.info "[#{self.class}] Retrieving running instances"
     []
   end
