@@ -266,7 +266,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     fail 'User object not provided!' unless opennebula_user
     {
       id: opennebula_user['ID'].to_i,
-      name: opennebula_user['TEMPLATE/NAME'],
+      name: opennebula_user['TEMPLATE/NAME'] || opennebula_user['NAME'],
       identities: canonical_user_identities(opennebula_user),
       email: opennebula_user['TEMPLATE/EMAIL'],
       groups: [
