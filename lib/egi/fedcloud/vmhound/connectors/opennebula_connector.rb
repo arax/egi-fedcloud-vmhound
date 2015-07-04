@@ -79,7 +79,7 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
 
   # Retrieves a list of instances matching given criteria.
   #
-  # @param allow_states [Array<String>] a list of allowed states
+  # @param allow_states [Array<String>] a list of allowed states, `nil` represents all
   # @param reject_states [Array<String>] a list of states to be rejected
   # @return [Array<Hash>] a list of instances matching given criteria
   def fetch_instances(allow_states = nil, reject_states = nil)
@@ -89,20 +89,25 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
     return if allow_states && allow_states.empty?
     reject_states ||= []
 
-    @vm_pool_ary = fetch_instances_batch_pool(@vm_pool) unless @vm_pool_ary
+    @vm_pool_ary ||= fetch_instances_batch_pool(@vm_pool)
+    @vm_pool_ary.collect { |vm| fetch_instances_vm(vm, allow_states, reject_states) }.compact
+  end
 
-    vms = []
-    @vm_pool_ary.each do |vm|
-      if reject_states.include? vm.state_str
-        Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Rejecting VM #{vm['ID']} " \
-                                          "-- #{vm.state_str}"
-        next
-      end
-
-      vms << canonical_instance(vm) if (allow_states.nil? || (allow_states && allow_states.include?(vm.state_str)))
+  # Applies given selection criteria and returns canonical representation
+  # of a VM or `nil`.
+  #
+  # @param vm [OpenNebula::VirtualMachine] VM instance from OpenNebula
+  # @param allow_states [NilClass, Array] allowed VM states, `nil` represents all
+  # @param reject_states [Array] reject VMs in given states
+  # @return [NilClass, Hash] normalized VM instance structure
+  def fetch_instances_vm(vm, allow_states, reject_states)
+    if reject_states.include? vm.state_str
+      Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Rejecting VM #{vm['ID']} " \
+                                        "-- #{vm.state_str}"
+      return
     end
 
-    vms
+    allow_states.nil? || allow_states.include?(vm.state_str) ? canonical_instance(vm) : nil
   end
 
   # Hides batch processing from the rest of the application. Returns
