@@ -3,7 +3,7 @@
 [![Gem Version](https://fury-badge.herokuapp.com/rb/egi-fedcloud-vmhound.png)](https://badge.fury.io/rb/egi-fedcloud-vmhound)
 [![Code Climate](https://codeclimate.com/github/arax/egi-fedcloud-vmhound.png)](https://codeclimate.com/github/arax/egi-fedcloud-vmhound)
 
-# EGI FedCloud CloudHound
+# EGI FedCloud VMHound
 
 A proof-of-concept utility for locating VM instances in EGI Federated Cloud.
 
