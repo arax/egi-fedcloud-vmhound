@@ -9,31 +9,13 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   def initialize(opts = {})
     super
 
-    secret = if opts[:username] && opts[:password]
-               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Using provided plain credentials"
-               "#{opts[:username]}:#{opts[:password]}"
-             else
-               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Falling back to file and environment credentials"
-               opts[:auth_file] ? File.read(opts[:auth_file]) : nil
-             end
-    secret.strip! if secret
-
     options = {}
     options[:sync] = true
     # TODO: fix https://github.com/OpenNebula/one/blob/ced1a29bfb3f3d1991ea88e658ea9462071fe4b8/src/oca/ruby/opennebula/client.rb#L166
     #options[:cert_dir] = opts[:ca_path] unless opts[:ca_path].blank?
     options[:disable_ssl_verify] = opts[:insecure]
 
-    client = OpenNebula::Client.new(secret, opts[:endpoint], options)
-
-    @vm_pool = OpenNebula::VirtualMachinePool.new(client)
-    @vm_pool_ary = nil
-
-    @image_pool = OpenNebula::ImagePool.new(client)
-    @canonical_image_pool = nil
-
-    @user_pool = OpenNebula::UserPool.new(client)
-    @canonical_user_pool = nil
+    initialize_pools initialize_secret(opts), opts, options
   end
 
   # Retrieves active instances from the underlying OpenNebula. Including instances
@@ -56,6 +38,44 @@ class Egi::Fedcloud::Vmhound::Connectors::OpennebulaConnector < Egi::Fedcloud::V
   end
 
   private
+
+  # Processes options and extracts the secret used to connect to
+  # OpenNebula. This can be username & password, file with a token,
+  # or nothing (`nil`).
+  #
+  # @param opts [Hash] hash with options
+  # @return [NilClass, String] constructed secret
+  def initialize_secret(opts = {})
+    secret = if opts[:username] && opts[:password]
+               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Using provided plain credentials"
+               "#{opts[:username]}:#{opts[:password]}"
+             else
+               Egi::Fedcloud::Vmhound::Log.debug "[#{self.class}] Falling back to file and environment credentials"
+               opts[:auth_file] ? File.read(opts[:auth_file]) : nil
+             end
+    secret.strip! if secret
+    secret
+  end
+
+  # Initializes client instance and corresponding OpenNebula
+  # resource pools and caches.
+  #
+  # @param secret [String, NilClass] authentication secret
+  # @param opts [Hash] user-defined options
+  # @param options [Hash] computed options for ONe client
+  # @return [NilClass] nothing
+  def initialize_pools(secret, opts = {}, options = {})
+    client = OpenNebula::Client.new(secret, opts[:endpoint], options)
+
+    @vm_pool = OpenNebula::VirtualMachinePool.new(client)
+    @vm_pool_ary = nil
+
+    @image_pool = OpenNebula::ImagePool.new(client)
+    @canonical_image_pool = nil
+
+    @user_pool = OpenNebula::UserPool.new(client)
+    @canonical_user_pool = nil
+  end
 
   # Retrieves a list of instances matching given criteria.
   #
